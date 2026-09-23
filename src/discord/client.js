@@ -1,5 +1,6 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
+const { seguirArtista, dejarArtista, listarArtistas } = require('../services/subscription.service');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -12,25 +13,38 @@ client.once('clientReady', () => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  const { commandName } = interaction;
+  const { commandName, guildId, guild, user } = interaction;
 
-  if (commandName === 'seguir') {
-    const artista = interaction.options.getString('artista');
-    await interaction.reply(`Por ahora esto es un placeholder: seguirías a **${artista}** 🎤`);
-  }
+  try {
+    if (commandName === 'seguir') {
+      const artista = interaction.options.getString('artista');
+      await seguirArtista(guildId, guild.name, artista, user.id);
+      await interaction.reply(`Listo, ahora sigues a **${artista}** 🎤`);
+    }
 
-  if (commandName === 'dejar') {
-    const artista = interaction.options.getString('artista');
-    await interaction.reply(`Placeholder: dejarías de seguir a **${artista}**`);
-  }
+    if (commandName === 'dejar') {
+      const artista = interaction.options.getString('artista');
+      await dejarArtista(guildId, artista);
+      await interaction.reply(`Dejaste de seguir a **${artista}**`);
+    }
 
-  if (commandName === 'artistas') {
-    await interaction.reply('Placeholder: aquí iría la lista de artistas seguidos');
-  }
+    if (commandName === 'artistas') {
+      const artistas = await listarArtistas(guildId);
+      if (artistas.length === 0) {
+        await interaction.reply('Este server no está siguiendo ningún artista todavía.');
+      } else {
+        const lista = artistas.map(a => `• ${a.artistName}`).join('\n');
+        await interaction.reply(`Artistas seguidos:\n${lista}`);
+      }
+    }
 
-  if (commandName === 'config') {
-    const canal = interaction.options.getChannel('canal');
-    await interaction.reply(`Placeholder: canal configurado como ${canal}`);
+    if (commandName === 'config') {
+      const canal = interaction.options.getChannel('canal');
+      await interaction.reply(`Placeholder: canal configurado como ${canal}`);
+    }
+  } catch (error) {
+    console.error('Error manejando comando:', error);
+    await interaction.reply('Ups, algo falló. Revisa la consola.');
   }
 });
 
