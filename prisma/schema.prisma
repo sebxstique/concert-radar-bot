@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Guild {
+  id                    BigInt   @id
+  name                  String
+  notificationChannelId BigInt?  @map("notification_channel_id")
+  notificationRoleId    BigInt?  @map("notification_role_id")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  subscriptions   ArtistSubscription[]
+  notifiedEvents  NotifiedEvent[]
+
+  @@map("guilds")
+}
+
+model ArtistSubscription {
+  id                       Int      @id @default(autoincrement())
+  guildId                  BigInt   @map("guild_id")
+  artistName               String   @map("artist_name")
+  ticketmasterAttractionId String?  @map("ticketmaster_attraction_id")
+  addedByUserId            BigInt   @map("added_by_user_id")
+  createdAt                DateTime @default(now()) @map("created_at")
+
+  guild          Guild           @relation(fields: [guildId], references: [id])
+  notifiedEvents NotifiedEvent[]
+
+  @@unique([guildId, artistName])
+  @@map("artist_subscriptions")
+}
+
+model NotifiedEvent {
+  id                  Int      @id @default(autoincrement())
+  guildId             BigInt   @map("guild_id")
+  subscriptionId      Int      @map("subscription_id")
+  ticketmasterEventId String   @map("ticketmaster_event_id")
+  eventName           String   @map("event_name")
+  eventDate           DateTime @map("event_date") @db.Date
+  venueName            String   @map("venue_name")
+  notifiedAt          DateTime @default(now()) @map("notified_at")
+
+  guild        Guild               @relation(fields: [guildId], references: [id])
+  subscription ArtistSubscription  @relation(fields: [subscriptionId], references: [id])
+
+  @@unique([guildId, ticketmasterEventId])
+  @@map("notified_events")
+}
