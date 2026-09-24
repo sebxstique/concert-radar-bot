@@ -32,14 +32,18 @@ async function listarArtistas(guildId) {
   });
 }
 
-async function configurarCanal(guildId, guildName, channelId) {
+async function configurarCanal(guildId, guildName, channelId, paises) {
   return prisma.guild.upsert({
     where: { id: BigInt(guildId) },
-    update: { notificationChannelId: BigInt(channelId) },
+    update: {
+      notificationChannelId: BigInt(channelId),
+      countryFilter: paises || null,
+    },
     create: {
       id: BigInt(guildId),
       name: guildName,
       notificationChannelId: BigInt(channelId),
+      countryFilter: paises || null,
     },
   });
 }

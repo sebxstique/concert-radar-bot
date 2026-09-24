@@ -12,6 +12,7 @@ model Guild {
   name                  String
   notificationChannelId BigInt?  @map("notification_channel_id")
   notificationRoleId    BigInt?  @map("notification_role_id")
+  countryFilter         String?  @map("country_filter")
   createdAt             DateTime @default(now()) @map("created_at")
 
   subscriptions   ArtistSubscription[]

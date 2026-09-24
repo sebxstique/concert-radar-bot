@@ -30,6 +30,11 @@ const commands = [
       option.setName('canal')
         .setDescription('Canal donde se postearán las notificaciones')
         .setRequired(true)
+    )
+    .addStringOption(option =>
+      option.setName('paises')
+        .setDescription('Códigos de país separados por coma (ej: CO,MX,US). Vacío = todos')
+        .setRequired(false)
     ),
 ];
 

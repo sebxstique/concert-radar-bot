@@ -9,7 +9,7 @@ async function notificarEventosNuevos(client) {
   const { buscarEventos } = require('./ticketmaster.service');
 
   for (const sub of suscripciones) {
-    const eventos = await buscarEventos(sub.artistName);
+    const eventos = await buscarEventos(sub.artistName, sub.guild.countryFilter);
 
     for (const evento of eventos) {
       const yaNotificado = await prisma.notifiedEvent.findUnique({

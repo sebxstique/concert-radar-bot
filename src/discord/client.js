@@ -42,8 +42,10 @@ client.on('interactionCreate', async (interaction) => {
 
     if (commandName === 'config') {
       const canal = interaction.options.getChannel('canal');
-      await configurarCanal(guildId, guild.name, canal.id);
-      await interaction.reply(`Canal de notificaciones configurado en ${canal} ✅`);
+      const paises = interaction.options.getString('paises');
+      await configurarCanal(guildId, guild.name, canal.id, paises);
+      const mensajePaises = paises ? ` (filtrado a: ${paises})` : ' (sin filtro de país)';
+      await interaction.reply(`Canal de notificaciones configurado en ${canal}${mensajePaises} ✅`);
     }
   } catch (error) {
     console.error('Error manejando comando:', error);
