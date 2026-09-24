@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const { seguirArtista, dejarArtista, listarArtistas, configurarCanal } = require('../services/subscription.service');
+const { iniciarScheduler } = require('../scheduler/check-events.job');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -8,6 +9,7 @@ const client = new Client({
 
 client.once('clientReady', () => {
   console.log(`Bot conectado como ${client.user.tag}`);
+  iniciarScheduler(client);
 });
 
 client.on('interactionCreate', async (interaction) => {
