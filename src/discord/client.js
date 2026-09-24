@@ -1,6 +1,6 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
-const { seguirArtista, dejarArtista, listarArtistas } = require('../services/subscription.service');
+const { seguirArtista, dejarArtista, listarArtistas, configurarCanal } = require('../services/subscription.service');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -40,7 +40,8 @@ client.on('interactionCreate', async (interaction) => {
 
     if (commandName === 'config') {
       const canal = interaction.options.getChannel('canal');
-      await interaction.reply(`Placeholder: canal configurado como ${canal}`);
+      await configurarCanal(guildId, guild.name, canal.id);
+      await interaction.reply(`Canal de notificaciones configurado en ${canal} ✅`);
     }
   } catch (error) {
     console.error('Error manejando comando:', error);
