@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { EmbedBuilder } = require('discord.js');
 const prisma = new PrismaClient();
 
 async function notificarEventosNuevos(client) {
@@ -28,9 +29,27 @@ async function notificarEventosNuevos(client) {
 
       try {
         const canal = await client.channels.fetch(canalId.toString());
-        await canal.send(
-          `🎤 **${sub.artistName}** anunció show!\n**${evento.name}**\n📅 ${evento.date}\n📍 ${evento.venue}`
-        );
+
+        const embed = new EmbedBuilder()
+          .setColor(0x5865F2)
+          .setTitle(`🎤 ${sub.artistName} anunció show!`)
+          .setDescription(evento.name)
+          .addFields(
+            { name: '📅 Fecha', value: evento.date || 'Por confirmar', inline: true },
+            { name: '📍 Venue', value: evento.venue, inline: true }
+          )
+          .setFooter({ text: 'Concert Radar Bot' })
+          .setTimestamp();
+
+        if (evento.url) {
+          embed.setURL(evento.url);
+        }
+
+        const mencionRol = sub.guild.notificationRoleId
+          ? `<@&${sub.guild.notificationRoleId}>`
+          : '';
+
+        await canal.send({ content: mencionRol, embeds: [embed] });
 
         await prisma.notifiedEvent.create({
           data: {

@@ -60,6 +60,7 @@ async function buscarEventos(artistName, countryFilter = null) {
         name: event.name,
         date: event.dates?.start?.localDate,
         venue: event._embedded?.venues?.[0]?.name || 'Venue desconocido',
+        url: event.url,
       })));
     } catch (error) {
       console.error(`Error consultando Ticketmaster para "${artistName}" (país: ${pais || 'global'}):`, error.message);
