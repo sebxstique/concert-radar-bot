@@ -2,6 +2,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const { seguirArtista, dejarArtista, listarArtistas, configurarCanal } = require('../services/subscription.service');
 const { iniciarScheduler } = require('../scheduler/check-events.job');
+const { MessageFlags } = require('discord.js');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -19,9 +20,23 @@ client.on('interactionCreate', async (interaction) => {
 
   try {
     if (commandName === 'seguir') {
-      const artista = interaction.options.getString('artista');
-      await seguirArtista(guildId, guild.name, artista, user.id);
-      await interaction.reply(`Listo, ahora sigues a **${artista}** 🎤`);
+      const artista = interaction.options.getString('artista').trim();
+
+      if (artista.length < 2) {
+        await interaction.reply({ content: 'El nombre del artista es muy corto.', flags: MessageFlags.Ephemeral });
+        return;
+      }
+
+      try {
+        await seguirArtista(guildId, guild.name, artista, user.id);
+        await interaction.reply(`Listo, ahora sigues a **${artista}** 🎤`);
+      } catch (error) {
+        if (error.code === 'P2002') { // Prisma: violación de unique constraint
+          await interaction.reply({ content: `Ya estás siguiendo a **${artista}** en este server.`, flags: MessageFlags.Ephemeral });
+        } else {
+          throw error;
+        }
+      }
     }
 
     if (commandName === 'dejar') {
