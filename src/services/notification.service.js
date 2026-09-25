@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const prisma = new PrismaClient();
 
 async function notificarEventosNuevos(client) {
@@ -10,7 +10,11 @@ async function notificarEventosNuevos(client) {
   const { buscarEventos } = require('./ticketmaster.service');
 
   for (const sub of suscripciones) {
-    const eventos = await buscarEventos(sub.artistName, sub.guild.countryFilter);
+    const eventos = await buscarEventos(
+      sub.artistName,
+      sub.guild.countryFilter,
+      sub.ticketmasterAttractionId
+    );
 
     for (const evento of eventos) {
       const yaNotificado = await prisma.notifiedEvent.findUnique({
@@ -41,15 +45,32 @@ async function notificarEventosNuevos(client) {
           .setFooter({ text: 'Concert Radar Bot' })
           .setTimestamp();
 
+        if (evento.image) embed.setImage(evento.image);
+        if (evento.url) embed.setURL(evento.url);
+
+        const botones = [
+          new ButtonBuilder()
+            .setCustomId(`recordar_${evento.id}_${evento.name.slice(0, 50)}_${evento.date}`)
+            .setLabel('🔔 Recuérdamelo')
+            .setStyle(ButtonStyle.Primary),
+        ];
+
         if (evento.url) {
-          embed.setURL(evento.url);
+          botones.push(
+            new ButtonBuilder()
+              .setLabel('🎟️ Comprar boletos')
+              .setStyle(ButtonStyle.Link)
+              .setURL(evento.url)
+          );
         }
+
+        const fila = new ActionRowBuilder().addComponents(botones);
 
         const mencionRol = sub.guild.notificationRoleId
           ? `<@&${sub.guild.notificationRoleId}>`
           : '';
 
-        await canal.send({ content: mencionRol, embeds: [embed] });
+        await canal.send({ content: mencionRol, embeds: [embed], components: [fila] });
 
         await prisma.notifiedEvent.create({
           data: {

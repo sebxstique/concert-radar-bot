@@ -11,7 +11,7 @@ describe('deduplicarEventos', () => {
     const resultado = deduplicarEventos(eventos);
 
     expect(resultado).toHaveLength(1);
-    expect(resultado[0].id).toBe('1'); // se queda con el primero
+    expect(resultado[0].id).toBe('1');
   });
 
   test('conserva eventos distintos (fecha o venue diferente)', () => {
