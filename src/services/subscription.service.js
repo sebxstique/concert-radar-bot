@@ -48,4 +48,20 @@ async function configurarCanal(guildId, guildName, channelId, paises) {
   });
 }
 
-module.exports = { seguirArtista, dejarArtista, listarArtistas, configurarCanal };
+async function guardarSetup(guildId, guildName, channelId, roleId) {
+  return prisma.guild.upsert({
+    where: { id: BigInt(guildId) },
+    update: {
+      notificationChannelId: BigInt(channelId),
+      notificationRoleId: BigInt(roleId),
+    },
+    create: {
+      id: BigInt(guildId),
+      name: guildName,
+      notificationChannelId: BigInt(channelId),
+      notificationRoleId: BigInt(roleId),
+    },
+  });
+}
+
+module.exports = { seguirArtista, dejarArtista, listarArtistas, configurarCanal, guardarSetup };

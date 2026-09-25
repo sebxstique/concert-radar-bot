@@ -1,6 +1,6 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
-const { seguirArtista, dejarArtista, listarArtistas, configurarCanal } = require('../services/subscription.service');
+const { seguirArtista, dejarArtista, listarArtistas, configurarCanal, guardarSetup } = require('../services/subscription.service');
 const { iniciarScheduler } = require('../scheduler/check-events.job');
 const { MessageFlags } = require('discord.js');
 
@@ -62,9 +62,48 @@ client.on('interactionCreate', async (interaction) => {
       const mensajePaises = paises ? ` (filtrado a: ${paises})` : ' (sin filtro de país)';
       await interaction.reply(`Canal de notificaciones configurado en ${canal}${mensajePaises} ✅`);
     }
+
+    if (commandName === 'setup') {
+      await interaction.deferReply(); // crear canal/rol puede tardar un par de segundos
+
+      // Verifica si ya existe el canal o el rol (evita duplicados si corren /setup dos veces)
+      let canal = interaction.guild.channels.cache.find(c => c.name === 'conciertos');
+      if (!canal) {
+        canal = await interaction.guild.channels.create({
+          name: 'conciertos',
+          reason: 'Canal creado por Concert Radar Bot',
+        });
+      }
+
+      let rol = interaction.guild.roles.cache.find(r => r.name === 'Fan-Conciertos');
+      if (!rol) {
+        rol = await interaction.guild.roles.create({
+          name: 'Fan-Conciertos',
+          mentionable: true,
+          reason: 'Rol creado por Concert Radar Bot',
+        });
+      }
+
+      await guardarSetup(guildId, guild.name, canal.id, rol.id);
+
+      await interaction.editReply(
+        `Setup completo ✅\nCanal: ${canal}\nRol: ${rol}\n\nUsa \`/seguir\` para empezar a suscribir artistas.`
+      );
+    }
   } catch (error) {
     console.error('Error manejando comando:', error);
-    await interaction.reply('Ups, algo falló. Revisa la consola.');
+
+    const mensaje = 'Ups, algo falló. Revisa la consola.';
+
+    try {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply(mensaje);
+      } else {
+        await interaction.reply(mensaje);
+      }
+    } catch (errorSecundario) {
+      console.error('Error adicional al intentar responder:', errorSecundario);
+    }
   }
 });
 

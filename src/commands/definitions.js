@@ -36,6 +36,9 @@ const commands = [
         .setDescription('Códigos de país separados por coma (ej: CO,MX,US). Vacío = todos')
         .setRequired(false)
     ),
+  new SlashCommandBuilder()
+    .setName('setup')
+    .setDescription('Configura automáticamente el canal y rol para notificaciones de conciertos'),
 ];
 
 module.exports = commands;
