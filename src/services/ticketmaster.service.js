@@ -14,15 +14,13 @@ async function consultarConReintentos(params, intento = 1) {
   } catch (error) {
     const status = error.response?.status;
 
-    // Rate limit (429) o error de servidor (5xx) → reintenta con backoff
     if ((status === 429 || status >= 500) && intento <= MAX_RETRIES) {
-      const delay = 1000 * Math.pow(2, intento); // 2s, 4s, 8s
+      const delay = 1000 * Math.pow(2, intento);
       console.warn(`Rate limit o error de servidor (${status}). Reintento ${intento}/${MAX_RETRIES} en ${delay}ms...`);
       await esperar(delay);
       return consultarConReintentos(params, intento + 1);
     }
 
-    // Error de autenticación (401/403) → no tiene sentido reintentar
     if (status === 401 || status === 403) {
       console.error('API key de Ticketmaster inválida o sin permisos.');
       throw error;
@@ -30,6 +28,16 @@ async function consultarConReintentos(params, intento = 1) {
 
     throw error;
   }
+}
+
+function deduplicarEventos(eventos) {
+  const vistos = new Set();
+  return eventos.filter(e => {
+    const clave = `${e.date}-${e.venue}`;
+    if (vistos.has(clave)) return false;
+    vistos.add(clave);
+    return true;
+  });
 }
 
 async function buscarEventos(artistName, countryFilter = null) {
@@ -55,17 +63,10 @@ async function buscarEventos(artistName, countryFilter = null) {
       })));
     } catch (error) {
       console.error(`Error consultando Ticketmaster para "${artistName}" (país: ${pais || 'global'}):`, error.message);
-      // Continúa con el siguiente país en vez de abortar todo
     }
   }
 
-  const vistos = new Set();
-  return eventosTotales.filter(e => {
-    const clave = `${e.date}-${e.venue}`;
-    if (vistos.has(clave)) return false;
-    vistos.add(clave);
-    return true;
-  });
+  return deduplicarEventos(eventosTotales);
 }
 
-module.exports = { buscarEventos };
+module.exports = { buscarEventos, deduplicarEventos };
